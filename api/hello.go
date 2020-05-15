@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kuozo/soy/pkg"
+	"github.com/kuozo/gopkg"
 )
 
 // Handler  hello heandler
 func Handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, pkg.GetCurrentTime())
+	fmt.Fprintf(w, gopkg.FormatNow())
 }
