@@ -8,8 +8,9 @@ import (
 // ProjectHandler  project heandler
 func ProjectHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == "post" {
+	if r.Method == "POST" {
 		w.Write([]byte("post request"))
+	} else {
+		fmt.Fprintf(w, "project work")
 	}
-	fmt.Fprintf(w, "project work")
 }
