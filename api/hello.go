@@ -3,12 +3,11 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
+
+	"github.com/kuozo/soy/pkg"
 )
 
 // Handler  hello heandler
 func Handler(w http.ResponseWriter, r *http.Request) {
-
-	cTime := time.Now().Format(time.RFC850)
-	fmt.Fprintf(w, cTime)
+	fmt.Fprintf(w, pkg.GetCurrentTime())
 }
