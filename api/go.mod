@@ -1,4 +1,4 @@
-module github.com/kuozo/soy
+module handler
 
 go 1.14
 
