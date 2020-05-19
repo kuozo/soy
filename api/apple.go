@@ -15,6 +15,8 @@ const (
 	Channel = "Channel"
 	// ResourceURL fetch data resouce url
 	ResourceURL = "http://www.appletuan.com/price"
+	// AuthToken auth token by self
+	AuthToken = "AuthToken"
 )
 
 var (
@@ -57,6 +59,14 @@ func GetAppleData() error {
 
 // AppleHandler fetch Apple Price from `appletuan`
 func AppleHandler(w http.ResponseWriter, r *http.Request) {
+	//auth api
+	token := r.Header.Get("x-auth-token")
+	if token != getEnvData(AuthToken) {
+		w.WriteHeader(401)
+		fmt.Fprintf(w, "not auth")
+		return
+	}
+
 	bot := newBot()
 	if bot == nil {
 		w.WriteHeader(504)
