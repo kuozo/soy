@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -24,7 +27,19 @@ var (
 		"Accept":     "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Safari/605.1.15",
 	}
+	prices = map[string]int{
+		"i5/2.0G/16G/512G/3733MHz/Bar": 14499,
+		"i5/2.0G/16G/1TB/3733MHz/Bar":  15999,
+		"i5/1.4G/8G/512G/2133MHz/Bar":  9999,
+	}
 )
+
+// Apple apple name
+type Apple struct {
+	Name          string
+	Price         int
+	OfficialPrice int
+}
 
 func getEnvData(key string) string {
 	return os.Getenv(key)
@@ -40,21 +55,81 @@ func newBot() *tgbotapi.BotAPI {
 }
 
 // GetAppleData get apple data from appletuan
-func GetAppleData() error {
+func GetAppleData(keyword string) ([]Apple, error) {
+	var name string
+	var price string
+	var apples = []Apple{}
 	cli := &http.Client{}
 	req, err := http.NewRequest("GET", ResourceURL, nil)
 	if err != nil {
-		return err
+		return apples, err
 	}
 	for k, v := range headerMap {
 		req.Header.Set(k, v)
 	}
 	resp, err := cli.Do(req)
 	if err != nil {
-		return err
+		return apples, err
 	}
 	defer resp.Body.Close()
-	return nil
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return apples, err
+	}
+	doc.Find(".price-info").Each(
+		func(i int, s *goquery.Selection) {
+			name = s.Find(".model-name").Text()
+			price = s.Find(".price-cell").Find("a").First().Text()
+			p, _ := strconv.Atoi(price)
+			if strings.Contains(name, keyword) && price != "" {
+				apples = append(apples, Apple{
+					Name:          name,
+					Price:         p,
+					OfficialPrice: matchOPrice(name),
+				})
+			}
+		})
+	return apples, nil
+}
+
+func matchOPrice(name string) int {
+	for k, v := range prices {
+		if strings.Contains(name, k) {
+			return v
+		}
+	}
+	return 0
+}
+
+func calDiscount(p, o int) string {
+	if o == 0 {
+		return "N/A"
+	}
+	return strconv.Itoa(p / o)
+}
+
+func genMessage(keyword string) (string, error) {
+
+	var b strings.Builder
+	b.WriteString("*Tody Apple Price*\n")
+	b.WriteString("------------------\n")
+	apples, err := GetAppleData(keyword)
+	if err != nil {
+		return "", err
+	}
+	for _, apple := range apples {
+		b.WriteString(apple.Name)
+		b.WriteString("\n")
+		b.WriteString("Price:`")
+		b.WriteString(strconv.Itoa(apple.Price))
+		b.WriteString("`, Official Price:`")
+		b.WriteString(strconv.Itoa(apple.OfficialPrice))
+		b.WriteString("`,Discount:`")
+		b.WriteString(calDiscount(apple.Price, apple.OfficialPrice))
+		b.WriteString("`\n")
+		b.WriteString("------------------\n")
+	}
+	return b.String(), nil
 }
 
 // AppleHandler fetch Apple Price from `appletuan`
@@ -73,7 +148,14 @@ func AppleHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "bot can not init.")
 		return
 	}
-	msg := tgbotapi.NewMessageToChannel(getEnvData(Channel), "Today not found apple price")
+	msgText, err := genMessage("13寸")
+	if err != nil {
+		w.WriteHeader(504)
+		fmt.Fprintf(w, "can not get prices data")
+		return
+	}
+	msg := tgbotapi.NewMessageToChannel(getEnvData(Channel), msgText)
+	msg.ParseMode = "MarkdownV2"
 	if _, err := bot.Send(msg); err != nil {
 		w.WriteHeader(504)
 		fmt.Fprintf(w, "send telegram message error")
