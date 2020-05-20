@@ -105,30 +105,32 @@ func calDiscount(p, o int) string {
 	if o == 0 {
 		return "N/A"
 	}
-	return strconv.Itoa(p / o)
+	return strconv.Itoa(int(float64(p) / float64(o) * 100))
 }
 
 func genMessage(keyword string) (string, error) {
 
 	var b strings.Builder
-	b.WriteString("*Tody Apple Price*\n")
+	b.WriteString("<b>Tody Apple Price</b>\n")
 	b.WriteString("------------------\n")
 	apples, err := GetAppleData(keyword)
 	if err != nil {
 		return "", err
 	}
 	for _, apple := range apples {
+		b.WriteString("<strong>")
 		b.WriteString(apple.Name)
-		b.WriteString("\n")
-		b.WriteString("Price:`")
+		b.WriteString("</strong>\n")
+		b.WriteString("<i>Price Info: ")
 		b.WriteString(strconv.Itoa(apple.Price))
-		b.WriteString("`, Official Price:`")
+		b.WriteString(" / ")
 		b.WriteString(strconv.Itoa(apple.OfficialPrice))
-		b.WriteString("`,Discount:`")
+		b.WriteString(" / ")
 		b.WriteString(calDiscount(apple.Price, apple.OfficialPrice))
-		b.WriteString("`\n")
+		b.WriteString("%</i>\n")
 		b.WriteString("------------------\n")
 	}
+	b.WriteString(`<pre><code class="language-python">print("work hard")</code></pre>`)
 	return b.String(), nil
 }
 
@@ -155,7 +157,7 @@ func AppleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	msg := tgbotapi.NewMessageToChannel(getEnvData(Channel), msgText)
-	msg.ParseMode = "MarkdownV2"
+	msg.ParseMode = "HTML"
 	if _, err := bot.Send(msg); err != nil {
 		w.WriteHeader(504)
 		fmt.Fprintf(w, "send telegram message error")
