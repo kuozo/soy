@@ -141,16 +141,20 @@ func genMessage(keyword string) (string, error) {
 	return b.String(), nil
 }
 
+func makeResponse(w http.ResponseWriter, resp Response, code int, message string) {
+	w.WriteHeader(code)
+	resp.Code = code
+	resp.Message = message
+	json.NewEncoder(w).Encode(resp)
+}
+
 // AppleHandler fetch Apple Price from `appletuan`
 func AppleHandler(w http.ResponseWriter, r *http.Request) {
 	//auth api
 	resp := Response{Code: 200, Message: "success"}
 	token := r.Header.Get("x-auth-token")
 	if token != getEnvData(AuthToken) {
-		w.WriteHeader(401)
-		resp.Code = 401
-		resp.Message = "not auth"
-		json.NewEncoder(w).Encode(resp)
+		makeResponse(w, resp, 401, "not auth")
 		return
 	}
 
@@ -164,19 +168,13 @@ func AppleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	msgText, err := genMessage("13寸")
 	if err != nil {
-		w.WriteHeader(504)
-		resp.Code = 504
-		resp.Message = "get apple product price data error"
-		json.NewEncoder(w).Encode(resp)
+		makeResponse(w, resp, 504, "get apple product price data error")
 		return
 	}
 	msg := tgbotapi.NewMessageToChannel(getEnvData(Channel), msgText)
 	msg.ParseMode = "HTML"
 	if _, err := bot.Send(msg); err != nil {
-		w.WriteHeader(504)
-		resp.Code = 504
-		resp.Message = "send telegram message error"
-		json.NewEncoder(w).Encode(resp)
+		makeResponse(w, resp, 504, "send telegram message error")
 		return
 	}
 	json.NewEncoder(w).Encode(resp)
