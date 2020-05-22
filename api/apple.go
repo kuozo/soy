@@ -144,7 +144,7 @@ func genMessage(keyword string) (string, error) {
 		b.WriteString("%</i>\n")
 		b.WriteString("------------------\n")
 	}
-	b.WriteString(`<pre><code class="language-python">\n`)
+	b.WriteString(`<pre><code class="language-python">`)
 	b.WriteString(code)
 	b.WriteString(`</code></pre>`)
 	return b.String(), nil
