@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"time"
 )
@@ -48,11 +49,12 @@ func calMinutes() float64 {
 	if err != nil {
 		return 0
 	}
+
 	return td.Sub(bd).Minutes()
 }
 
 func calDays(minutes float64) int {
-	return int(minutes / 60 / 24)
+	return int(math.Ceil(minutes/60/24)) + 1
 }
 
 func calYear(minutes float64) int {
