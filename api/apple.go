@@ -29,16 +29,14 @@ var (
 		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Safari/605.1.15",
 	}
 	prices = map[string]int{
-		"i5/2.0G/16G/512G/3733MHz/Bar": 14499,
-		"i5/2.0G/16G/1TB/3733MHz/Bar":  15999,
-		"i5/1.4G/8G/512G/2133MHz/Bar":  9999,
+		"i5/2.0G/16G/512G": 14499,
+		"i5/2.0G/16G/1TB":  15999,
+		"八代i5/1.4G/8G/512": 9999,
 	}
 	code = `
 	import this
 
-	if __name__ == '__main__':
-		print("work hard.")
-	
+	print("work hard.")
 	`
 )
 
